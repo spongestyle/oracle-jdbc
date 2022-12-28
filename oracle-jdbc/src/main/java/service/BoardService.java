@@ -64,13 +64,99 @@ public class BoardService {
 			}
 			e.printStackTrace();
 		} finally {
+			if(conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return row;
+
+	}
+	
+	//boardOne
+	
+	public Board getBoardOne(int boardNo) {
+		boardDao = new BoardDao();
+		Connection conn = null;
+		Board board = null;
+		try {
+			conn = DBUtil.getConnection();
+			conn.setAutoCommit(false);
+			board = boardDao.selectBoardOne(conn, boardNo);
+			conn.commit();
+		} catch (Exception e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+			e.printStackTrace();
+		} finally {
 			try {
 				conn.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		}
-		return row;
-
+		return board;
 	}
+	
+	// Modify
+		public int modifyBoard(Board board) {
+			boardDao = new BoardDao();
+			Connection conn = null;
+			int row = 0;
+			try {
+				conn = DBUtil.getConnection();
+				conn.setAutoCommit(false);
+				row = boardDao.updateBoard(conn, board);
+				conn.commit();
+			} catch (Exception e) {
+				try {
+					conn.rollback();
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			} finally {
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			return row;
+		}
+		
+		// Remove
+		public int removeBoard(Board board) {
+			boardDao = new BoardDao();
+			Connection conn = null;
+			int row = 0;
+			try {
+				conn = DBUtil.getConnection();
+				conn.setAutoCommit(false);
+				row = boardDao.deleteBoard(conn, board);
+				conn.commit();
+			} catch (Exception e) {
+				try {
+					conn.rollback();
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			} finally {
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			return row;
+		}
+	
+
 }

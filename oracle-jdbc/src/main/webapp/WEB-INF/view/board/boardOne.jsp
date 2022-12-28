@@ -13,25 +13,42 @@
 <title>boardOne.jsp</title>
 </head>
 <body>
+	<h1>게시글</h1>
+
 	<table border="1">
-		<thead>
-			<tr>
-				<th>no</th>
-				<th>title</th>
-				<th>content</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td><%=board.getNo()%></td>
-				<td><%=board.getTitle()%></td>
-				<td><%=board.getContent()%></td>
-			</tr>
-		</tbody>
+		<tr>
+			<th>NO</th>
+			<td>${board.boardNo}</td>
+		</tr>
+
+		<tr>
+			<th>TITLE</th>
+			<td>${board.boardTitle}</td>
+		</tr>
+
+		<tr>
+			<th>CONTENT</th>
+			<td>${board.boardContent}</td>
+		</tr>
+
+		<tr>
+			<th>ID</th>
+			<td>${board.memberId}</td>
+		</tr>
+
+		<tr>
+			<th>UPDATEDATE</th>
+			<td>${board.updatedate}</td>
+		</tr>
+
+		<tr>
+			<th>CREATEDATE</th>
+			<td>${board.createdate}</td>
+		</tr>
 	</table>
 	<div>
-		<a href="<%=request.getContextPath()%>/mvc/ModifyBoardFormController?no=<%=board.getNo()%>">수정</a>
-		<a href="<%=request.getContextPath()%>/mvc/RemoveBoardActionController?no=<%=board.getNo()%>">삭제</a>
+		<a href="${pageContext.request.contextPath}/UpdateBoardFormController?boardNo=${board.boardNo}">수정</a>
+		<a href="${pageContext.request.contextPath}/DeleteBoardActionController?boardNo=${board.boardNo}">삭제</a>
 	</div>
 </body>
 </html>

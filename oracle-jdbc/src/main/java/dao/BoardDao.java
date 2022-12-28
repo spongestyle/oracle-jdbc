@@ -3,6 +3,7 @@ package dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 import util.DBUtil;
@@ -33,7 +34,6 @@ public class BoardDao {
 	
 	//insertBoard.jsp
 	public int insertBoard(Connection conn,  Board board) throws Exception {
-		DBUtil db = new DBUtil();
 		String sql = "insert into board "
 				+ "		(board_no, board_title, board_content, member_id, updatedate, createdate)"
 				+ "		values (board_seq.nextval, ? , ?, ?, sysdate, sysdate)";
@@ -45,18 +45,17 @@ public class BoardDao {
 			)
 		 */
 		PreparedStatement stmt = conn.prepareStatement(sql);
-		stmt.setString(1, "boardTitle");
-		stmt.setString(2, "boardContent");
-		stmt.setString(3, "memberId");
+		stmt.setString(1, board.getBoardTitle());
+		stmt.setString(2, board.getBoardContent());
+		stmt.setString(3, board.getMemberId());
 		
 		int row = stmt.executeUpdate();
-		stmt.close();
 		
 		return row;
 	}
 	
 	// boardOne.jsp
-	public Board selectBoardOne (Connection conn, int no) throws SQLException {
+	public Board selectBoardOne (Connection conn, int boardNo) throws SQLException {
 		Board board = null;
 		String sql = "SELECT board_no boardNo, board_title boardTitle, board_content boardCOntent, member_id memberId, updatedate, createdate"
 				+  " FROM board where board_no = ?";
@@ -65,14 +64,50 @@ public class BoardDao {
 		ResultSet rs = stmt.executeQuery();
 		if(rs.next()) {
 			board = new Board();
-			board.setBoardNo("boardNO");
-			board.setBoardTitle("boardTitle");
-			board.setBoardTitle("boardTitle");
-			board.set
+			board.setBoardNo(rs.getInt("boardNo"));
+			board.setBoardTitle(rs.getString("boardTitle"));
+			board.setBoardContent("BoardContent");
+			board.setMemberId("memberId");
+			board.setUpdatedate("Updatedate");
+			board.setCreatedate("Createdate");
 		}
 		stmt.close();
 		rs.close();
 		
 		return board;
 	}
-}
+	
+	
+	
+	
+		// UPDATE
+		public int updateBoard (Connection conn, Board board) throws Exception {
+			String sql = "UPDATE board SET board_title = ?, board_content = ? WHERE board_no = ?";
+			PreparedStatement stmt = null;
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, board.getBoardTitle());
+			stmt.setString(2, board.getBoardContent());
+			stmt.setInt(3, board.getBoardNo());
+			int row = stmt.executeUpdate();
+			
+			stmt.close();
+			
+			return row;
+		}
+		
+		// DELETE
+		public int deleteBoard (Connection conn, Board board) throws Exception {
+			String sql = "DELETE FROM board WHERE Board_no = ?";
+			PreparedStatement stmt = null;
+			stmt = conn.prepareStatement(sql);
+			stmt.setInt(1, board.getBoardNo());
+			int row = stmt.executeUpdate();
+			
+		
+			stmt.close();
+			
+			return row;
+		}
+	}
+	
+

@@ -1,6 +1,8 @@
 package controller;
 
 import java.io.IOException;
+
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -15,21 +17,22 @@ import vo.Board;
 public class BoardOneController extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// 1. C
-		int no = 0;
+		int boardNo = 0;
 
-		if(request.getParameter("no") != null){
-			no = Integer.parseInt(request.getParameter("no"));
+		if(request.getParameter("boardNo") != null){
+			boardNo = Integer.parseInt(request.getParameter("boardNo"));
 		}
-		// System.out.println(no);
+		// System.out.println(boardNo);
 		
 	    Board board = new Board();
 		BoardService boardService = new BoardService();
-		board = boardService.getBoardOne(no);
+		board = boardService.getBoardOne(boardNo);
 	    
 		request.setAttribute("board", board);
 		
 		// 3. V
-		RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/view/mvcBoardOne.jsp");
+		RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/view/board/boardOne.jsp");
+		
 		
 		rd.forward(request, response);
 		/*

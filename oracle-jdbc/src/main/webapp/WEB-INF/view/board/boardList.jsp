@@ -45,7 +45,7 @@
 		<c:forEach var="b" items="${boardList}">
 			<tr>
 				<td>${b.boardNo}</td>
-				<td><a href="">${b.boardTitle}</a></td>
+				<td><a href="${pageContext.request.contextPath}/BoardListController?boardTitle=${b.boardTitle}">${b.boardTitle}</a></td>
 				<td>${b.createdate}</td>
 			</tr>
 		</c:forEach>
@@ -53,6 +53,9 @@
 	<div>
 		<a href="${pageContext.request.contextPath}/BoardListController?rowPerPage=${rowPerPage}&currentPage=${currentPage-1}">이전</a>
 		<a href="${pageContext.request.contextPath}/BoardListController?rowPerPage=${rowPerPage}&currentPage=${currentPage+1}">다음</a>
+	</div>
+	<div>
+		<a href = "${pageContext.request.contextPath}/AddBoardController">추가하기</a>
 	</div>
 </body>
 </html>

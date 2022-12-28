@@ -12,7 +12,12 @@ import javax.servlet.http.HttpServletResponse;
 public class ModifyMemberController extends HttpServlet {
 		// 회원정보 수정 폼
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	
+		/*
+		 *  view -> /WEB-INF/view/member/modifyMeber.jsp
+		 * 
+		 */
+		
+		
 		}
 	
 		// 회원정보 수정액션
