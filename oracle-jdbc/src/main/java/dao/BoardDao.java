@@ -1,113 +1,193 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
+import java.sql.*;
+import java.util.*;
 
-import util.DBUtil;
+import oracle.jdbc.proxy.annotation.Pre;
 import vo.Board;
 
 public class BoardDao {
-	// 검색 추가
-	public ArrayList<Board> selectBoardListByPage(Connection conn, int beginRow, int endRow) throws Exception {
-		ArrayList<Board> list = new ArrayList<Board>();
-		String sql = "SELECT board_no boardNo, board_title boardTitle, createdate"
-				+ " FROM (SELECT rownum rnum, board_no, board_title, createdate"
-				+ "			FROM (SELECT board_no, board_title, createdate"
-				+ "					FROM board ORDER BY board_no DESC))"
-				+ " WHERE rnum BETWEEN ? AND ?"; // WHERE rnum >=? AND rnum <=?;
+	
+	// 1-1) BOARDLIST 조회(검색어 X)
+	public ArrayList<Board> selectBoardListDao(Connection conn, int beginRow, int endRow) throws Exception {
+		ArrayList<Board> resultBoardList = new ArrayList<Board>();
+		
+		String sql = "SELECT board_no boardNo, board_title boardTitle, member_id memberId, updatedate, createdate"
+				+ " FROM (SELECT rownum rnum, board_no, board_title, member_id, updatedate, createdate"
+				+ "		FROM (SELECT board_no, board_title, member_id, updatedate, createdate"
+				+ "			FROM board ORDER BY board_no DESC))"
+				+ " WHERE rnum BETWEEN ? AND ?";
+		
 		PreparedStatement stmt = conn.prepareStatement(sql);
 		stmt.setInt(1, beginRow);
 		stmt.setInt(2, endRow);
+		
 		ResultSet rs = stmt.executeQuery();
+
 		while(rs.next()) {
-			Board b = new Board();
-			b.setBoardNo(rs.getInt("boardNo"));
-			b.setBoardTitle(rs.getString("boardTitle"));
-			b.setCreatedate(rs.getString("createdate"));
-			list.add(b);
+			Board board = new Board();
+			board.setBoardNo(rs.getInt("boardNo"));
+			board.setBoardTitle(rs.getString("boardTitle"));
+			board.setMemberId(rs.getString("memberId"));
+			board.setUpdatedate(rs.getString("updatedate"));
+			board.setCreatedate(rs.getString("createdate"));
+			
+			resultBoardList.add(board);
 		}
-		return list;
+		
+		rs.close();
+		stmt.close();
+		return resultBoardList;
 	}
 	
-	//insertBoard.jsp
-	public int insertBoard(Connection conn,  Board board) throws Exception {
-		String sql = "insert into board "
-				+ "		(board_no, board_title, board_content, member_id, updatedate, createdate)"
-				+ "		values (board_seq.nextval, ? , ?, ?, sysdate, sysdate)";
-		/*
-		 	insert into board (
-    			board_no, board_title, board_content, member_id, updatedate, createdate
-			) values (
-    			board_seq.nextval, ? , ?, ?, sysdate, sysdate
-			)
-		 */
+	// 1-2) BOARDLIST 조회(검색어 O)
+	public ArrayList<Board> selectBoardListDao(Connection conn, int beginRow, int endRow, String searchWord) throws Exception {
+		ArrayList<Board> resultBoardList = new ArrayList<Board>();
+		System.out.println("검색어 : " + searchWord);
+		String sql = "SELECT board_no boardNo, board_title boardTitle, member_id memberId, updatedate, createdate"
+				+ " FROM (SELECT rownum rnum, board_no, board_title, member_id, updatedate, createdate"
+				+ "		FROM (SELECT board_no, board_title, member_id, updatedate, createdate"
+				+ "			FROM board"
+				+ "			ORDER BY board_no DESC))"
+				+ " WHERE rnum BETWEEN ? AND ? AND board_title LIKE ?";
+		
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		stmt.setInt(1, beginRow);
+		stmt.setInt(2, endRow);
+		stmt.setString(3, "%"+searchWord+"%");
+		ResultSet rs = stmt.executeQuery();
+
+		while(rs.next()) {
+			Board board = new Board();
+			board.setBoardNo(rs.getInt("boardNo"));
+			board.setBoardTitle(rs.getString("boardTitle"));
+			board.setMemberId(rs.getString("memberId"));
+			board.setUpdatedate(rs.getString("updatedate"));
+			board.setCreatedate(rs.getString("createdate"));
+			
+			resultBoardList.add(board);
+		}
+		
+		rs.close();
+		stmt.close();
+		return resultBoardList;
+	}
+	
+	// 2) BOARDONE 조회
+	public Board selectBoardOneDao(Connection conn, int boardNo) throws Exception {
+		Board resultBoard = null;
+		
+		String sql = "SELECT board_no boardNo, board_title boardTitle, board_content boardContent, member_id memberId, updatedate, createdate"
+				+ " FROM board"
+				+ " WHERE board_no = ?";
+		
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		stmt.setInt(1, boardNo);
+
+		ResultSet rs = stmt.executeQuery();
+		while(rs.next()) {
+			resultBoard = new Board();
+			resultBoard.setBoardNo(rs.getInt("boardNo"));
+			resultBoard.setBoardTitle(rs.getString("boardTitle"));
+			resultBoard.setBoardContent(rs.getString("boardContent"));
+			resultBoard.setMemberId(rs.getString("memberId"));
+			resultBoard.setUpdatedate(rs.getString("updatedate"));
+			resultBoard.setCreatedate(rs.getString("createdate"));
+		}
+		
+		rs.close();
+		stmt.close();
+		return resultBoard;
+	}
+	
+	// 3) INSERTBOARD
+	public int insertBoardDao(Connection conn, Board board) throws Exception {
+		int resultRow = 0;
+		
+		String sql = "INSERT INTO"
+				+ " board (board_no, board_title, board_content, member_id, updatedate, createdate)"
+				+ " VALUES (board_seq.nextval, ?, ?, ?, sysdate, sysdate)";
 		PreparedStatement stmt = conn.prepareStatement(sql);
 		stmt.setString(1, board.getBoardTitle());
 		stmt.setString(2, board.getBoardContent());
 		stmt.setString(3, board.getMemberId());
 		
-		int row = stmt.executeUpdate();
-		
-		return row;
+		resultRow = stmt.executeUpdate();
+		stmt.close();
+		return resultRow;
 	}
 	
-	// boardOne.jsp
-	public Board selectBoardOne (Connection conn, int boardNo) throws SQLException {
-		Board board = null;
-		String sql = "SELECT board_no boardNo, board_title boardTitle, board_content boardCOntent, member_id memberId, updatedate, createdate"
-				+  " FROM board where board_no = ?";
+	// 4) UPDATEBOARD
+	public int updateBoardDao(Connection conn, Board board) throws Exception {
+		int resultRow = 0;
+		
+		String sql = "UPDATE board SET board_title = ?, board_content = ?, updatedate = sysdate"
+				+ " WHERE board_no = ? AND member_id = ?";
 		PreparedStatement stmt = conn.prepareStatement(sql);
-		stmt.setInt(1, boardNo);
+		stmt.setString(1, board.getBoardTitle());
+		stmt.setString(2, board.getBoardContent());
+		stmt.setInt(3, board.getBoardNo());
+		stmt.setString(4, board.getMemberId());
+		
+		resultRow = stmt.executeUpdate();
+		stmt.close();
+		return resultRow;
+	}
+	
+	// 5) DELETEBOARD
+	public int deleteBoardDao(Connection conn, Board board) throws Exception {
+		int resultRow = 0;
+		
+		String sql = "DELETE"
+				+ " FROM board"
+				+ " WHERE board_no = ? AND member_id = ?";
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		stmt.setInt(1, board.getBoardNo());
+		stmt.setString(2, board.getMemberId());
+		
+		resultRow = stmt.executeUpdate();
+		stmt.close();
+		return resultRow;
+	}
+	
+	// 6) boardList 개수 구하기
+	
+	// 6-1) 검색어 X
+	public int getBoardListRowDao(Connection conn) throws Exception {
+		int resultRow = 0;
+		
+		String sql = "SELECT COUNT(*)"
+				+ " FROM board";
+		
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		
 		ResultSet rs = stmt.executeQuery();
 		if(rs.next()) {
-			board = new Board();
-			board.setBoardNo(rs.getInt("boardNo"));
-			board.setBoardTitle(rs.getString("boardTitle"));
-			board.setBoardContent("BoardContent");
-			board.setMemberId("memberId");
-			board.setUpdatedate("Updatedate");
-			board.setCreatedate("Createdate");
+			resultRow = rs.getInt("COUNT(*)");
 		}
-		stmt.close();
+		
 		rs.close();
-		
-		return board;
+		stmt.close();
+		return resultRow;
 	}
-	
-	
-	
-	
-		// UPDATE
-		public int updateBoard (Connection conn, Board board) throws Exception {
-			String sql = "UPDATE board SET board_title = ?, board_content = ? WHERE board_no = ?";
-			PreparedStatement stmt = null;
-			stmt = conn.prepareStatement(sql);
-			stmt.setString(1, board.getBoardTitle());
-			stmt.setString(2, board.getBoardContent());
-			stmt.setInt(3, board.getBoardNo());
-			int row = stmt.executeUpdate();
-			
-			stmt.close();
-			
-			return row;
+	// 6-2) 검색어 O
+	public int getBoardListRowDao(Connection conn, String searchWord) throws Exception {
+		int resultRow = 0;
+		
+		String sql = "SELECT COUNT(*)"
+				+ " FROM board"
+				+ " WHERE board_title LIKE ?";
+		
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		stmt.setString(1, "%"+searchWord+"%");
+		
+		ResultSet rs = stmt.executeQuery();
+		if(rs.next()) {
+			resultRow = rs.getInt("COUNT(*)");
 		}
 		
-		// DELETE
-		public int deleteBoard (Connection conn, Board board) throws Exception {
-			String sql = "DELETE FROM board WHERE Board_no = ?";
-			PreparedStatement stmt = null;
-			stmt = conn.prepareStatement(sql);
-			stmt.setInt(1, board.getBoardNo());
-			int row = stmt.executeUpdate();
-			
-		
-			stmt.close();
-			
-			return row;
-		}
+		rs.close();
+		stmt.close();
+		return resultRow;
 	}
-	
-
+}

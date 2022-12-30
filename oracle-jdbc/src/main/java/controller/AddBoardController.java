@@ -6,72 +6,61 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import service.BoardService;
 import vo.Board;
-
+import vo.Member;
 
 @WebServlet("/board/addBoard")
 public class AddBoardController extends HttpServlet {
 	private BoardService boardService;
 	
-	// 글쓰기 폼
+	// Form
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	
 		// 로그인 유효성 검사
+		HttpSession session = request.getSession();
+		
+		// 로그인 여부확인, 로그인 되어있을 경우 회원페이지로 이동
+		Member loginMember = (Member)session.getAttribute("loginMember");
+		
+		if(loginMember == null) {
+			String target = request.getContextPath()+"/home";
+			response.sendRedirect(target);
+			return;
+		}
+		
+		request.setAttribute("nowPage", "board");
+		request.getRequestDispatcher("/WEB-INF/view/board/addBoardForm.jsp").forward(request, response);
+	}
 
-	request.getRequestDispatcher("/WEB-INF/view/board/addBoardForm.jsp").forward(request, response);
-	}	
-		
-		
-	
-	
-	// 글쓰기 액션
+	// Action
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.setCharacterEncoding("utf-8");
 		
-		response.setCharacterEncoding("UTF-8");
-		String boardTitle = null;
-		String boardContent = null;
-		String memberId = null;
+		HttpSession session = request.getSession();
+		Member member = (Member)session.getAttribute("loginMember");
 		
-		if(request.getParameter("boardTitle")==null || request.getParameter("boardTitle").equals("")) {
-			response.sendRedirect(request.getContextPath()+"/WEB-INF/view/board/addBoardForm.jsp");
-		}else {
-			boardTitle = request.getParameter("boardTitle");
-		}
-		if(request.getParameter("boardContent")==null || request.getParameter("boardContent").equals("")) {
-			response.sendRedirect(request.getContextPath()+"/WEB-INF/view/board/addBoardForm.jsp");
-		}else {
-			boardContent = request.getParameter("boardContent");
-		}
-		if(request.getParameter("memberId")==null || request.getParameter("memberId").equals("")) {
-			response.sendRedirect(request.getContextPath()+"/WEB-INF/view/board/addBoardForm.jsp");
-		}else {
-			memberId = request.getParameter("memberId");
-		}
-		System.out.println(boardTitle);
-		System.out.println(boardContent);
-		System.out.println(memberId);
+		String boardTitle = request.getParameter("boardTitle");
+		String boardContent = request.getParameter("boardContent");
+		String memberId = member.getMemberId();
 		
 		Board board = new Board();
 		board.setBoardTitle(boardTitle);
 		board.setBoardContent(boardContent);
 		board.setMemberId(memberId);
 		
-		// 2 model
+		this.boardService = new BoardService();
 		
-		BoardService boardService = new BoardService();
-		int row = boardService.getInsertBoard(board);
-		if(row ==1) {
-			System.out.println("입력성공");
-			request.getRequestDispatcher("/BoardListController").forward(request, response);
-		} else {
-			System.out.println("입력실패");
-			request.getRequestDispatcher("/AddBoardFormController").forward(request, response);
+		if(boardService.insertBoardService(board) != 1) {
+			System.out.println("삽입 실패");
+			response.sendRedirect(request.getContextPath()+"/board/addBoard");
+			return;
 		}
-		// response.sendRedirect(request.getContextPath()+"/BoardListController");
 		
+		System.out.println("삽입 성공");
 		
+		response.sendRedirect(request.getContextPath()+"/board/boardList");
 	}
 
 }
